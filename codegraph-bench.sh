@@ -85,17 +85,20 @@ echo ""
 
 # ── 2. 写入 meta.json ─────────────────────────────────────────────────────────
 REPO_NAME="$(basename "$REPO_PATH")"
-node --input-type=module <<EOF > "$OUT_DIR/meta.json"
-const meta = {
-  repo: ${JSON.stringify(REPO_NAME)},
-  repo_path: ${JSON.stringify(REPO_PATH)},
-  prompt: ${JSON.stringify(PROMPT)},
-  runs_per_arm: $RUNS,
-  claude_cli: ${JSON.stringify(CLAUDE_CLI)},
-  timestamp: new Date().toISOString(),
-};
-process.stdout.write(JSON.stringify(meta, null, 2));
-EOF
+# 通过环境变量传参，避免 heredoc 中 bash 对 ${JSON.stringify()} 的 bad substitution
+_REPO_NAME="$REPO_NAME" _REPO_PATH="$REPO_PATH" _PROMPT="$PROMPT" \
+  _RUNS="$RUNS" _CLAUDE_CLI="$CLAUDE_CLI" \
+  node -e '
+    const meta = {
+      repo:        process.env._REPO_NAME,
+      repo_path:   process.env._REPO_PATH,
+      prompt:      process.env._PROMPT,
+      runs_per_arm: Number(process.env._RUNS),
+      claude_cli:  process.env._CLAUDE_CLI,
+      timestamp:   new Date().toISOString(),
+    };
+    process.stdout.write(JSON.stringify(meta, null, 2));
+  ' > "$OUT_DIR/meta.json"
 
 # ── 3. 运行 WITH CodeGraph ────────────────────────────────────────────────────
 echo "▶ [2/5] Running WITH CodeGraph ($RUNS runs)..."
@@ -116,12 +119,13 @@ echo "▶ [4/5] Parsing results..."
 node "$BENCH_DIR/lib/parse-results.mjs" "$OUT_DIR"
 
 # 将 meta 合并到 summary.json
-node --input-type=module <<EOF
-import { readFileSync, writeFileSync } from 'node:fs';
-const meta = JSON.parse(readFileSync('$OUT_DIR/meta.json', 'utf8'));
-const summary = JSON.parse(readFileSync('$OUT_DIR/summary.json', 'utf8'));
-writeFileSync('$OUT_DIR/summary.json', JSON.stringify({ ...meta, ...summary }, null, 2));
-EOF
+_OUT_DIR="$OUT_DIR" node -e '
+  const fs = require("fs");
+  const dir = process.env._OUT_DIR;
+  const meta = JSON.parse(fs.readFileSync(dir + "/meta.json", "utf8"));
+  const summary = JSON.parse(fs.readFileSync(dir + "/summary.json", "utf8"));
+  fs.writeFileSync(dir + "/summary.json", JSON.stringify({ ...meta, ...summary }, null, 2));
+'
 echo ""
 
 # ── 6. 生成报告 ───────────────────────────────────────────────────────────────
