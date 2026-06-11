@@ -6,6 +6,7 @@
 #   bash lib/run-one.sh <label> <prompt> <repo_path> <out_dir> [--with-codegraph]
 #
 # 环境变量:
+#   CLAUDE_CLI     — Claude CLI 命令（默认: claude，可设为 "mc --code" 等）
 #   CODEGRAPH_CLI  — codegraph bin 路径（with-codegraph 模式必须）
 set -euo pipefail
 
@@ -18,7 +19,10 @@ WITH_CG="${5:-}"
 mkdir -p "$OUT_DIR"
 OUT_FILE="$OUT_DIR/${LABEL}.jsonl"
 
-echo "[run-one] Starting $LABEL ($([ -n "$WITH_CG" ] && echo 'WITH' || echo 'WITHOUT') CodeGraph) ..."
+# CLI 优先级：环境变量 CLAUDE_CLI > 默认 claude
+CLAUDE_CLI="${CLAUDE_CLI:-claude}"
+
+echo "[run-one] Starting $LABEL ($([ -n "$WITH_CG" ] && echo 'WITH' || echo 'WITHOUT') CodeGraph) ... [cli: $CLAUDE_CLI]"
 
 # ── 构建 MCP 配置（仅 with-codegraph 时注入）──────────────────────────────────
 MCP_CONFIG_FILE=""
@@ -46,7 +50,7 @@ START_MS=$(date +%s%3N)
 (
   cd "$REPO_PATH"
   if [ -n "$MCP_CONFIG_FILE" ]; then
-    claude \
+    $CLAUDE_CLI \
       --print \
       --output-format stream-json \
       --mcp-config "$MCP_CONFIG_FILE" \
@@ -55,7 +59,7 @@ START_MS=$(date +%s%3N)
       "$PROMPT" \
       > "$OUT_FILE" 2>&1
   else
-    claude \
+    $CLAUDE_CLI \
       --print \
       --output-format stream-json \
       --allowedTools "Read,Write,Bash,Grep,Glob,LS" \

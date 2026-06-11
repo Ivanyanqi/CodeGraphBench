@@ -2,23 +2,30 @@
 # codegraph-bench.sh — CodeGraph A/B 基准测试主入口
 #
 # 用法:
-#   bash codegraph-bench.sh <repo_path_or_url> [prompt] [--runs N]
+#   bash codegraph-bench.sh <repo_path_or_url> [prompt] [--runs N] [--cli <cmd>]
 #
 # 示例:
 #   bash codegraph-bench.sh /path/to/repo
+#   bash codegraph-bench.sh /path/to/repo --cli "mc --code"
 #   bash codegraph-bench.sh https://github.com/user/repo "How does auth work?" --runs 3
-#   bash codegraph-bench.sh /path/to/repo --runs 1
+#   CLAUDE_CLI="mc --code" bash codegraph-bench.sh /path/to/repo --runs 1
 set -euo pipefail
 
 BENCH_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 # ── 参数解析 ──────────────────────────────────────────────────────────────────
 if [ $# -eq 0 ]; then
-  echo "Usage: bash codegraph-bench.sh <repo_path_or_url> [prompt] [--runs N]"
+  echo "Usage: bash codegraph-bench.sh <repo_path_or_url> [prompt] [--runs N] [--cli <cmd>]"
+  echo ""
+  echo "Options:"
+  echo "  --runs N      Runs per arm (default: 3)"
+  echo "  --cli <cmd>   Claude CLI command (default: claude)"
+  echo "                Can also be set via CLAUDE_CLI env var"
   echo ""
   echo "Examples:"
   echo "  bash codegraph-bench.sh /path/to/repo"
-  echo "  bash codegraph-bench.sh https://github.com/user/repo 'How does auth work?' --runs 3"
+  echo "  bash codegraph-bench.sh /path/to/repo --cli 'mc --code'"
+  echo "  CLAUDE_CLI='mc --code' bash codegraph-bench.sh /path/to/repo --runs 3"
   exit 1
 fi
 
@@ -28,11 +35,17 @@ shift
 DEFAULT_PROMPT="Explain the overall architecture of this codebase. Describe the main modules, their responsibilities, and how they interact. Be concise."
 PROMPT="$DEFAULT_PROMPT"
 RUNS=3
+# CLI 优先级：--cli 参数 > CLAUDE_CLI 环境变量 > 默认 claude
+CLAUDE_CLI="${CLAUDE_CLI:-claude}"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --runs)
       RUNS="${2:?--runs requires a number}"
+      shift 2
+      ;;
+    --cli)
+      CLAUDE_CLI="${2:?--cli requires a command}"
       shift 2
       ;;
     --*)
@@ -46,6 +59,9 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+# 导出供 run-one.sh 使用
+export CLAUDE_CLI
+
 # ── 创建本次 bench 输出目录 ───────────────────────────────────────────────────
 TIMESTAMP=$(date +%Y%m%d-%H%M%S)
 OUT_DIR="$BENCH_DIR/data/bench-$TIMESTAMP"
@@ -56,6 +72,7 @@ echo "║          CodeGraphBench — A/B Test Runner                ║"
 echo "╠══════════════════════════════════════════════════════════╣"
 printf "║  Repo:  %-50s ║\n" "$REPO_INPUT"
 printf "║  Runs:  %-3s per arm (total: %-3s)                       ║\n" "$RUNS" "$((RUNS * 2))"
+printf "║  CLI:   %-50s ║\n" "$CLAUDE_CLI"
 printf "║  Out:   %-50s ║\n" "$(basename "$OUT_DIR")"
 echo "╚══════════════════════════════════════════════════════════╝"
 echo ""
@@ -74,6 +91,7 @@ const meta = {
   repo_path: ${JSON.stringify(REPO_PATH)},
   prompt: ${JSON.stringify(PROMPT)},
   runs_per_arm: $RUNS,
+  claude_cli: ${JSON.stringify(CLAUDE_CLI)},
   timestamp: new Date().toISOString(),
 };
 process.stdout.write(JSON.stringify(meta, null, 2));
