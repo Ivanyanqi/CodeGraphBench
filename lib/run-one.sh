@@ -45,7 +45,9 @@ EOF
 fi
 
 # ── 执行 claude headless ──────────────────────────────────────────────────────
-START_MS=$(date +%s%3N)
+# macOS 的 date 不支持 %3N（毫秒），用 python3 获取毫秒时间戳
+ms_now() { python3 -c "import time; print(int(time.time() * 1000))"; }
+START_MS=$(ms_now)
 
 (
   cd "$REPO_PATH"
@@ -71,7 +73,7 @@ START_MS=$(date +%s%3N)
 
 EXIT_CODE=$?
 
-END_MS=$(date +%s%3N)
+END_MS=$(ms_now)
 ELAPSED=$((END_MS - START_MS))
 
 # 清理临时文件
