@@ -55,6 +55,7 @@ START_MS=$(ms_now)
     $CLAUDE_CLI \
       --print \
       --output-format stream-json \
+      --verbose \
       --mcp-config "$MCP_CONFIG_FILE" \
       --allowedTools "Read,Write,Bash,Grep,Glob,LS,mcp__codegraph__*" \
       --dangerously-skip-permissions \
@@ -64,6 +65,7 @@ START_MS=$(ms_now)
     $CLAUDE_CLI \
       --print \
       --output-format stream-json \
+      --verbose \
       --allowedTools "Read,Write,Bash,Grep,Glob,LS" \
       --dangerously-skip-permissions \
       "$PROMPT" \
