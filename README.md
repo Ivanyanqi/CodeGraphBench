@@ -13,7 +13,7 @@
 
 ## 前置要求
 
-- Claude CLI 已安装：`claude`（官方）或兼容替代品（如 `mc --code`）
+- Claude CLI 已安装：`claude`（官方）或任意支持相同参数约定的客户端
 - Node.js 18+
 - codegraph 源码位于 `../codegraph`（与本项目同级），或通过 `CODEGRAPH_SRC` 环境变量指定
 
@@ -36,15 +36,18 @@ bash codegraph-bench.sh /path/to/repo "How does authentication work?"
 # 自定义运行次数（每组跑 5 次取中位数，结果更稳定）
 bash codegraph-bench.sh /path/to/repo --runs 5
 
-# 使用 mc --code 作为 Claude CLI（--cli 参数）
-bash codegraph-bench.sh /path/to/repo --cli "mc --code"
+# 指定具体的 Claude 客户端命令
+bash codegraph-bench.sh /path/to/repo --cli claude
+
+# 指定模型
+bash codegraph-bench.sh /path/to/repo --cli "claude --model claude-opus-4-5"
 
 # 通过环境变量指定 CLI（适合长期使用）
-export CLAUDE_CLI="mc --code"
+export CLAUDE_CLI=claude
 bash codegraph-bench.sh /path/to/repo --runs 3
 
 # 组合使用
-bash codegraph-bench.sh https://github.com/user/repo "Explain the request flow" --runs 3 --cli "mc --code"
+bash codegraph-bench.sh https://github.com/user/repo "Explain the request flow" --runs 3 --cli claude
 ```
 
 ## 输出
@@ -94,7 +97,7 @@ CodeGraphBench/
 
 | 变量 | 默认值 | 说明 |
 |------|--------|------|
-| `CLAUDE_CLI` | `claude` | Claude CLI 命令，可设为 `mc --code` 等兼容替代品 |
+| `CLAUDE_CLI` | `claude` | Claude CLI 命令，支持任意兼容客户端（需支持 `--print`、`--output-format`、`--mcp-config` 等参数） |
 | `CODEGRAPH_SRC` | `../codegraph` | codegraph 源码目录 |
 | `CODEGRAPH_REPO` | `../codegraph` | 集成测试使用的 repo |
 
@@ -116,4 +119,4 @@ bash tests/integration.sh
 - 每次运行会产生真实 API 费用，建议先用 `--runs 1` 验证流程
 - 结果受网络延迟、API 负载等因素影响，建议 `--runs 3` 以上取中位数
 - `data/` 目录已加入 `.gitignore`，测试数据不会提交到 git
-- 使用 `mc --code` 等代理 CLI 时，请确保其支持与 `claude` 相同的 `--print`、`--output-format stream-json`、`--mcp-config` 等参数
+- 使用自定义客户端时，请确保其支持 `--print`、`--output-format stream-json`、`--verbose`、`--mcp-config`、`--allowedTools`、`--dangerously-skip-permissions` 等参数

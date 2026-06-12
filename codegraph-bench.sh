@@ -6,9 +6,10 @@
 #
 # 示例:
 #   bash codegraph-bench.sh /path/to/repo
-#   bash codegraph-bench.sh /path/to/repo --cli "mc --code"
+#   bash codegraph-bench.sh /path/to/repo --cli claude
+#   bash codegraph-bench.sh /path/to/repo --cli "claude --model claude-opus-4-5"
 #   bash codegraph-bench.sh https://github.com/user/repo "How does auth work?" --runs 3
-#   CLAUDE_CLI="mc --code" bash codegraph-bench.sh /path/to/repo --runs 1
+#   CLAUDE_CLI=claude bash codegraph-bench.sh /path/to/repo --runs 1
 set -euo pipefail
 
 BENCH_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -21,12 +22,14 @@ if [ $# -eq 0 ]; then
   echo "Options:"
   echo "  --runs N      Runs per arm (default: 3)"
   echo "  --cli <cmd>   Claude CLI command (default: claude)"
-  echo "                Can also be set via CLAUDE_CLI env var"
+  echo "                Supports any claude-compatible CLI."
+  echo "                Can also be set via CLAUDE_CLI env var."
   echo ""
   echo "Examples:"
   echo "  bash codegraph-bench.sh /path/to/repo"
-  echo "  bash codegraph-bench.sh /path/to/repo --cli 'mc --code'"
-  echo "  CLAUDE_CLI='mc --code' bash codegraph-bench.sh /path/to/repo --runs 3"
+  echo "  bash codegraph-bench.sh /path/to/repo --cli claude"
+  echo "  bash codegraph-bench.sh /path/to/repo --cli 'claude --model claude-opus-4-5'"
+  echo "  CLAUDE_CLI=claude bash codegraph-bench.sh /path/to/repo --runs 3"
   exit 1
 fi
 

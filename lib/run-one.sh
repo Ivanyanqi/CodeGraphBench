@@ -6,7 +6,7 @@
 #   bash lib/run-one.sh <label> <prompt> <repo_path> <out_dir> [--with-codegraph]
 #
 # 环境变量:
-#   CLAUDE_CLI     — Claude CLI 命令（默认: claude，可设为 "mc --code" 等）
+#   CLAUDE_CLI     — Claude CLI 命令（默认: claude，支持任意兼容 claude 参数的客户端）
 #   CODEGRAPH_CLI  — codegraph bin 路径（with-codegraph 模式必须）
 set -euo pipefail
 
