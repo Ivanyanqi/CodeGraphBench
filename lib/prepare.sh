@@ -13,15 +13,16 @@ set -euo pipefail
 
 REPO_INPUT="${1:?repo path or URL required}"
 BENCH_DIR="${2:?bench dir required}"
+WORKSPACE_DIR="${3:-$(cd "$BENCH_DIR/../.." && pwd)}"
 
 # codegraph 源码目录（可通过环境变量覆盖）
 # BENCH_DIR 的父目录即 workspace root，codegraph 与 CodeGraphBench 同级
-CODEGRAPH_SRC="${CODEGRAPH_SRC:-$(cd "$BENCH_DIR/.." && pwd)/codegraph}"
+CODEGRAPH_SRC="${CODEGRAPH_SRC:-$(cd "$BENCH_DIR/../.." && pwd)/projects/codegraph}"
 
 # ── 1. 解析 repo 路径 ─────────────────────────────────────────────────────────
 if [[ "$REPO_INPUT" == https://* ]] || [[ "$REPO_INPUT" == git@* ]]; then
   REPO_NAME=$(basename "$REPO_INPUT" .git)
-  REPO_PATH="$BENCH_DIR/data/repos/$REPO_NAME"
+  REPO_PATH="$WORKSPACE_DIR/data/codegraph-bench/repos/$REPO_NAME"
   mkdir -p "$(dirname "$REPO_PATH")"
   if [ ! -d "$REPO_PATH/.git" ]; then
     echo "[prepare] Cloning $REPO_INPUT → $REPO_PATH"

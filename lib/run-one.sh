@@ -37,7 +37,7 @@ if [[ "$WITH_CG" == "--with-codegraph" ]]; then
   "mcpServers": {
     "codegraph": {
       "command": "node",
-      "args": ["$CG_CLI", "serve", "$REPO_PATH"]
+      "args": ["$CG_CLI", "serve", "--mcp", "--path", "$REPO_PATH"]
     }
   }
 }
